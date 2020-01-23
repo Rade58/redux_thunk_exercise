@@ -102,4 +102,44 @@ export const fetchItems = () => {
 }
 ```
 
+## :FOUR: SADA MOZES DA REWRITE-UJES Items.js UZ POMOC connect-A. ODNOSNO DA ISKORISTISH HIGHR ORDER
 
+NARAVNO, JOS NISI SASVIM DEFINISAO DISPATCHING, ALI OVO DA URADIS SADA
+
+- code src/components/Items.js
+
+```javascript
+import React from 'react'
+import Item from './Item'
+// uvozim
+import {connect} from 'react-redux'
+//
+
+const Items = ({items = []}) => {
+  return (
+  <section>
+    {items.map(item => <Item key={item.id} item={item} />)}
+  </section>
+  )
+}
+
+// OVO ZAMENJUJEM
+// export default Items
+
+// OVIM
+export default connect(
+  ({items}) => ({items})
+)(Items)
+```
+
+## SADA SE MOGU POZABAVITI DISPATCHING-OM 
+
+SADA NE MORAS DA KORISTIS NIKAKV NOVI CONTAINER (POSTO JE REC O SIMPLE PROJECT-U), SAMO TREBA DA REDEFINISES FetchItem KOMPONENTU
+
+TREBA DA ISKORISTIS `connect`, KAKO BI JOJ ZADAO mapDispatchToProps, STVARAJUCI NA TAKAV NACIN CONTAINER, SAMO TREBAS DA UMESTO FetchItems REACT KOMPONENTE, IZVEZES KOMPONENTU, KOJA JE NASTAL UPOTREBOM connect-A, JER JE FetchItems VEC UPOTREBLJEN U APPLICATION KOMPONENTI
+
+- code src/components/FetchItems.js
+
+```javascript
+
+```
