@@ -1,1 +1,71 @@
-# redux thunk exercise
+# redux thunk implementation
+
+OVDE CU DATI OBJASNJENJE KAKO SAM IMPLEMENTIRAO REDUX THUNK, A TI POGLEDAJ FAJLOVE
+
+## :one: IMPORTING applyMiddleware FROM 'redux' AND IMPORTING DEFULT OF 'redux-thunk'
+
+## :two: USING applyMiddleware(thunk) AS SECOND ARGUMENT OF createStore
+
+`src/index.js`
+
+```javascript
+import React from 'react'
+import ReactDom from 'react-dom'
+
+// UZIMAM   applyMiddleware     I       thunk
+import {createStore, applyMiddleware} from 'redux'
+import thunk from 'redux-thunk'
+//
+
+import {Provider} from 'react-redux'
+
+import reducer from './reducers/'
+
+import FetchItems from './components/FetchItems'
+import Items from './components/Items'
+
+
+const root = document.getElementById('root')
+
+// PRI KREIRANJU STORE, SADA ZADAJEM I MIDDLEWARE, A TO CE BITI POMENUTI thunk
+const store = createStore(
+  reducer,
+  applyMiddleware(thunk)
+)
+//
+
+
+const App = () => {
+  return (
+  <div className="App">
+    <h2>Items Stream</h2>
+    <FetchItems />
+    <Items />
+  </div>
+  )
+}
+
+
+ReactDom.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  root
+)
+```
+
+## SADA TREBAM DA KREIRAM 'ACTION CREATOR' (BIG AIR QUOTES), KOJI CE DA RETURN-UJE FUNCTION, KOJA CE EVENTUALLY DISPATCH-OVATI ACTION
+
+REDUX NECE DA IMA BILO STA SA STVOJIM ASYNC-OM, I ZELI DA OSTANE  `WORLD OF PURE FUNCTIONS`
+
+DAKLE SVE ASYNC STVARI TREBA DA BUDU ISOLATED U MIDDLEWARE
+
+**ASYNC STVARI NE TREBA DA E DOGADJAJU U REDUCERU**
+
+**ASYNC STVARI NE TREBA DA SE DESAVAJU NI U mapDispatchToProps**
+
+ili bil ocemu along those lines
+
+## KREIRAM `src/actions.js`
+
+
