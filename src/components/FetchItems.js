@@ -18,5 +18,17 @@ const FetchItems = ({fetchItems}) => {
 // VEC OVO
 
 const mapDispatchToProps = (dispatch, ownProps) => {
-  return fetchItems()()
+  // DAKLE POZIVA SE, UVEZENI     fetchItems
+
+  // A ON TREBA DA PROIZVEDE FUNKCIJU
+
+  // FUNKCIJA JE DEFINISANA TAKO DA JOS SE PROSLEDJUJE dispatch
+
+
+  return {
+    fetchItems: () => dispatch(fetchItems())
+  }
 }
+
+
+export default connect(null, mapDispatchToProps)(FetchItems)

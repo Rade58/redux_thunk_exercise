@@ -5,6 +5,10 @@ import {connect} from 'react-redux'
 //
 
 const Items = ({items = []}) => {
+
+  console.log(items)
+  console.log(items.map)
+
   return (
   <section>
     {items.map(item => <Item key={item.id} item={item} />)}
@@ -12,10 +16,13 @@ const Items = ({items = []}) => {
   )
 }
 
-// OVO ZAMENJUJEM
-// export default Items
+const mapStateToProps = (state, ownProps) => {
 
-// OVIM
-export default connect(
-  ({items}) => ({items})
-)(Items)
+  console.log(state)
+
+  return {
+    items: state.items
+  }
+}
+
+export default connect(mapStateToProps)(Items)

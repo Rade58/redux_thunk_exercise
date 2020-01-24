@@ -85,7 +85,7 @@ const apiURI = process.env.REACT_APP_API_URI       // JA CU TAKO ZADAVATI IME VA
 
 export const fetchItems = () => {
 
-  dispatch => {
+  return dispatch => {
     
     // OVDE DAKLE JA PRAVIM API CALL
 
@@ -94,6 +94,7 @@ export const fetchItems = () => {
     .then(data => {
 
       // za sada cu samo zadati console logging
+      // KASNIJE CU OVDE URADITI NESTO DRUGO
 
       console.log({data, dispatch})
     })
@@ -127,19 +128,132 @@ const Items = ({items = []}) => {
 // export default Items
 
 // OVIM
+
 export default connect(
   ({items}) => ({items})
 )(Items)
 ```
 
-## SADA SE MOGU POZABAVITI DISPATCHING-OM 
+## SADA SE MOGU POZABAVITI DISPATCHING-OM, ALI PRE TOGA MORAM MODIFIKOVATI ACTION CEATOR, JER JOS NISAM DEFINISAO STA SE RADI SA DATOM; KOJE BIVA FETCHED
 
-SADA NE MORAS DA KORISTIS NIKAKV NOVI CONTAINER (POSTO JE REC O SIMPLE PROJECT-U), SAMO TREBA DA REDEFINISES FetchItem KOMPONENTU
+OPET KODIRAM U actions.js
 
-TREBA DA ISKORISTIS `connect`, KAKO BI JOJ ZADAO mapDispatchToProps, STVARAJUCI NA TAKAV NACIN CONTAINER, SAMO TREBAS DA UMESTO FetchItems REACT KOMPONENTE, IZVEZES KOMPONENTU, KOJA JE NASTAL UPOTREBOM connect-A, JER JE FetchItems VEC UPOTREBLJEN U APPLICATION KOMPONENTI
+- code src/actions.js
+
+CILJ MI JE DAKLE DA SADA DEFINISEM DA THUNK, USTVARI RADI NESTO SA PODACIMA
+
+ODNOSNO TREBA DA SE DEFINISE DISPATCHING, KOJI BI SE DOGODIO PRILIKOM POZIVA THUNK-A
+
+```javascript
+const ADD_ITEMS = "ADD_ITEMS"
+
+export const fetchItems = () => {
+
+  return dispatch => {
+
+    fetch(apiURI)
+    .then(response => response.json())
+    .then(data => {
+
+      const items = data.tweets   // OVO JE ZBOG EXTERNAL API, KOJI KORISTIM, ZNAS VEC ZASTO SAM PROMENIO IME
+
+      // OVDE U dispatch ARGUMENT, ZA KOJI SMATRAM DA CE BITI FUNKCIJA
+      // PROSLEDJUJEM NOVI POZIV KAO ARGUMENT
+      dispatch(addItems({items}))
+
+      // POZIVAM FUNKCIJU KOJU SAM DEKLARISAO DOLE
+
+    })
+  }
+
+}
+
+// DAKLE DEFNISAO SAM NOVU FUNKCIJU, KOJ USAM IZNAD UPOTREBIO
+// OVA FUNKCIJA RETURN-UJE OBJEKAT SA ACTION TYPE-OM I PAYLOAD-OM
+
+function addItems({items}){
+  return {type: ADD_ITEMS, payload: {items}}
+}
+```
+
+## SADA DA ISKORISTIM, ONAJ GORE PRIKAZANI 'ACTION CRATOR' fetchItems
+
+NAIME, RANIJE SAM REKAO DA MI applyMiddleware, KOJI SAM ISKORISTIO, PRI KREIRANJU STORE-A KADA SAM MU PROSLEDIO REDUX THUNK, USTVARI OMOGUCAVA JEDNU STVAR:
+
+**DA UMESTO ACTION OBJEKTA (KOJI IMA type I payload); JA USTVARI SMEM DA DISPATCH-UJEM FUNKCIJU, ODNOSNO THUNK, KOJI CE EVENTUALLY DISPATCH-OVATI, ACTION KOJI SAM ZADAO**
+
+**ZATO OPET KORISTIM HIGH ORDER COMPONENT PRINCIP, KAKO BI DEFINISAO mapDispatchToProps, ALI OVOG PUTA JA DAKLE DEFINISEM POZIVANJE dispatch-A, SA ARGUMENTOM, KOJI NECE BITI OBJEKAT, VEC FUNKCIJA, CIJI JE PARAMETAR dispatch**
 
 - code src/components/FetchItems.js
 
 ```javascript
+import React from 'react'
+
+// UVEZI I REACT-REDUX-OV connect, ALI I 'ACTION CREATOR'-A, KOJEG SI KREIRAO
+import {connect} from 'react-redux'
+import {fetchItems} from '../actions'
+//
+
+
+const FetchItems = ({fetchItems}) => {
+  return (
+  <button onClick={fetchItems}>Fetch Items</button>
+  )
+}
+
+// OVO VISE NIJE DEFAULT KOJI IZVOZIS
+// export default FetchItems
+
+// VEC OVO
+
+const mapDispatchToProps = (dispatch, ownProps) => {
+  // DAKLE POZIVA SE, UVEZENI     fetchItems
+
+  // A ON TREBA DA PROIZVEDE FUNKCIJU
+
+  // FUNKCIJA JE DEFINISANA TAKO DA JOS SE PROSLEDJUJE dispatch
+
+
+  return {
+    fetchItems: () => dispatch(fetchItems())
+  }
+}
+
+
+export default connect(null, mapDispatchToProps)(FetchItems)
+```
+
+
+## OSTAJE SAMO DA SE POZABAVIS REDUCER-OM
+
+ALI NE VEZANO ZA TRENUTNU TEMU, UVEK OBRATI PAZNJU DA KADA HANDLE-UJES ACTION DA SVE LEPO WIRE-UJES, POGOTOVO KADA KORISTIS combineReducers, JER RANIJE SU TI SE PODKRADALE GRESKE, GDE SI DA UMESTO RETURN-UJES BRANCH OF STATE, TI USTVARI RETURN-OVAO CEO STATE U PARCIJALNOM REDUCER-U (odnosno obrati paznju da ne return-ujes pogresnu stvar pri handle-ovanju action-a, u `parcijalnom` reduceru, a da onda kada pozivas combineReducers **NE DEFINISES KAKO TREBA OBJEKAT KOJI ZADAJES KAO ARGUMENT *combineReducers* funkciji** (ODNOSNO DA IMAS DISKONTINUITET IZMEDJU TA DVA 'MESTA'))
+
+- code src/reducers/index.js
+
+```javascript
+import {combineReducers} from 'redux'
+
+const itemsReducer = (items = [], action) => {
+
+  if(action.type === "ADD_ITEMS"){   // OBRATI PAZNJU I DA NE KORISTIS OVAKVE STRING LITERALSE NEGO DA REFERENCIRAS ACTIO NTYPE IZ NEKE VARIJABLE (TO SAM VEC RANIJE MNOGO PUTA GOVORIO)
+    
+    console.log({items: action.payload.items})
+
+    return action.payload.items       // DAKLE OBRATI PAZNJU DA OVDE RETURNUJES SAMO items NIZ
+  }
+
+
+  return items
+}
+
+export default combineReducers(
+  {items: itemsReducer}           // ZATO STO SI ZADAO DA TAJ REDUCER, VIDI RACUNA SAMO O items
+)
 
 ```
+
+## SADA DA ISPROBAS VE OVO MOZES DA PRI POKRETANJU REACT APP PROSLEDIS I ENVIROMENT VARIABLE
+
+- REACT_APP_API_URI='url zadaj ovde' npm start
+
+U BELESKAMA SAM OSTAVIO URL, KOJI MOZES DA ZADAS ZA OVAJ PROJEKAT
